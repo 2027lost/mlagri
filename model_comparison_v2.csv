@@ -1,0 +1,29 @@
+Model,MAE,RMSE,R2,MAPE
+Global XGB-joint(log) → DO,3.1345,3.9732,-1.1104,195.6175
+Global XGB-joint     → pH,0.3244,0.6508,0.1618,5.7732
+Baseline sklearn MO-GBR → DO,2.9648,4.1686,-1.3232,201.5371
+Baseline sklearn MO-GBR → pH,0.3111,0.6397,0.1901,5.5617
+Per-pond IoTPond2 → DO,1.4864,1.6723,-2.3723,106.5564
+Per-pond IoTPond2 → pH,0.2387,0.3518,-1.133,3.6238
+Global on IoTPond2 → DO,4.2554,4.5892,-24.3955,293.7368
+Global on IoTPond2 → pH,0.0801,0.2347,0.0511,1.2932
+Per-pond IoTPond3 → DO,0.6494,0.7189,-331.8808,12.7806
+Per-pond IoTPond3 → pH,0.1208,0.1502,-0.7432,1.6895
+Global on IoTPond3 → DO,0.8116,0.9263,-551.5836,15.9784
+Global on IoTPond3 → pH,0.1826,0.2129,-2.5011,2.528
+Per-pond IoTPond4 → DO,1.9378,2.1972,-2.268,128.7595
+Per-pond IoTPond4 → pH,0.0563,0.1346,-0.1196,0.7267
+Global on IoTPond4 → DO,1.5601,1.8932,-1.4262,102.571
+Global on IoTPond4 → pH,0.0543,0.1358,-0.1397,0.699
+Per-pond IoTPond6 → DO,1.5911,2.5257,-0.6195,48.9741
+Per-pond IoTPond6 → pH,0.4811,0.719,-0.1823,7.691
+Global on IoTPond6 → DO,5.2436,5.869,-7.7443,374.6701
+Global on IoTPond6 → pH,1.3081,1.4416,-3.7524,24.6346
+Per-pond IoTPond7 → DO,3.1654,3.7897,-0.3659,38.7073
+Per-pond IoTPond7 → pH,0.0564,0.0641,-1.141,0.7984
+Global on IoTPond7 → DO,1.7539,2.5577,0.3778,23.4098
+Global on IoTPond7 → pH,0.02,0.0258,0.6547,0.2828
+Per-pond IoTpond1 → DO,1.1155,1.3341,-4.1683,84.4657
+Per-pond IoTpond1 → pH,0.2064,0.2638,-1.8447,3.0509
+Global on IoTpond1 → DO,4.3907,4.7212,-63.7245,316.3149
+Global on IoTpond1 → pH,0.0526,0.1512,0.0652,0.8111
