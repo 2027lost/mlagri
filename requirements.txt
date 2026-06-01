@@ -11,3 +11,4 @@ seaborn==0.13.2
 nbformat==5.10.4
 jupyter
 kaggle
+joblib
