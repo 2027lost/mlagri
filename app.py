@@ -1,4 +1,4 @@
-import os, json
+import os, json, traceback
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -17,24 +17,30 @@ def load_assets():
     with open(META_PATH) as fh:
         meta = json.load(fh)
     history = pd.read_parquet(HIST_PATH)
-    global_bundle = joblib.load(os.path.join(MODELS_DIR, "global.joblib"))
-    per_pond = {}
-    for name in meta["pond_names"]:
-        path = os.path.join(MODELS_DIR, f"pond_{name}.joblib")
-        if os.path.exists(path):
-            per_pond[name] = joblib.load(path)
     results = None
     if os.path.exists("model_comparison_v2.csv"):
         results = pd.read_csv("model_comparison_v2.csv")
-    return (meta, history, global_bundle, per_pond, results)
+    return (meta, history, results)
 
 
-meta, history, global_bundle, per_pond, results = load_assets()
+@st.cache_resource
+def load_model_bundle(model_path):
+    return joblib.load(model_path)
+
+
+def model_load_error(model_path, error):
+    st.error(f"Could not load model artifact: `{model_path}`")
+    st.code("".join(traceback.format_exception(type(error), error, error.__traceback__)))
+    st.stop()
+
+
+meta, history, results = load_assets()
 st.sidebar.title("🐟 Pond Forecaster")
 st.sidebar.caption("24-hour ahead DO & pH prediction")
 pond_choice = st.sidebar.selectbox("Pond", options=meta["pond_names"], index=0)
 available_models = ["Global (XGB joint + quantiles, log-DO)"]
-if pond_choice in per_pond:
+pond_model_path = os.path.join(MODELS_DIR, f"pond_{pond_choice}.joblib")
+if os.path.exists(pond_model_path):
     available_models.insert(0, f"Per-pond specialist ({pond_choice})")
 model_choice = st.sidebar.radio("Model", available_models)
 use_per_pond = model_choice.startswith("Per-pond")
@@ -101,9 +107,13 @@ st.title("🐟 Fish Pond 24-h Water Quality Forecast")
 st.caption(
     f"Predicting DO and pH 24 hours ahead using XGBoost joint multi-output trees with quantile bands. Pond: **{pond_choice}** | Model: **{model_choice}**"
 )
-bundle = (
-    per_pond[pond_choice] if use_per_pond and pond_choice in per_pond else global_bundle
+selected_model_path = (
+    pond_model_path if use_per_pond else os.path.join(MODELS_DIR, "global.joblib")
 )
+try:
+    bundle = load_model_bundle(selected_model_path)
+except Exception as exc:
+    model_load_error(selected_model_path, exc)
 fc = forecast_for(pond_choice, bundle, history)
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Anchor DO (now)", f"{fc['anchor_do']:.2f} mg/L")
