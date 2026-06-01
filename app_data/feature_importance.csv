@@ -1,0 +1,198 @@
+model,feature,importance
+Global,Temp,0.2792953848838806
+Global,Turb,0.4136895537376404
+Global,HourSin,1.9309465885162354
+Global,HourCos,0.41417279839515686
+Global,DayOfYearSin,3.341679334640503
+Global,DayOfYearCos,1.426666498184204
+Global,Temp_lag1,0.3146699368953705
+Global,Temp_lag3,0.580166220664978
+Global,Temp_lag6,1.2423975467681885
+Global,Temp_lag12,1.0625743865966797
+Global,Turb_lag1,0.6047125458717346
+Global,Turb_lag3,0.5855907201766968
+Global,Turb_lag6,1.7703709602355957
+Global,Turb_lag12,2.7062368392944336
+Global,DO_lag1,0.8885515928268433
+Global,DO_lag3,1.35243558883667
+Global,DO_lag6,0.7405030727386475
+Global,DO_lag12,0.9166125059127808
+Global,DO_lag24,0.5780768394470215
+Global,pH_lag1,2.7141101360321045
+Global,pH_lag3,1.5323710441589355
+Global,pH_lag6,2.19588303565979
+Global,pH_lag12,2.07731294631958
+Global,pH_lag24,2.695591449737549
+Global,Temp_roll6_mean,0.5975943803787231
+Global,Temp_roll6_std,0.8102334141731262
+Global,DO_roll6_mean,2.8266236782073975
+Global,pH_roll6_mean,79.07695770263672
+Global,PondCode,0.39848649501800537
+Per-pond specialist (IoTPond2),Temp,0.10205971449613571
+Per-pond specialist (IoTPond2),Turb,0.09531204402446747
+Per-pond specialist (IoTPond2),HourSin,0.3796983063220978
+Per-pond specialist (IoTPond2),HourCos,0.14854393899440765
+Per-pond specialist (IoTPond2),DayOfYearSin,1.4131437540054321
+Per-pond specialist (IoTPond2),DayOfYearCos,0.1805701106786728
+Per-pond specialist (IoTPond2),Temp_lag1,0.13376599550247192
+Per-pond specialist (IoTPond2),Temp_lag3,0.20362362265586853
+Per-pond specialist (IoTPond2),Temp_lag6,0.20162685215473175
+Per-pond specialist (IoTPond2),Temp_lag12,0.2097640335559845
+Per-pond specialist (IoTPond2),Turb_lag1,0.05445993319153786
+Per-pond specialist (IoTPond2),Turb_lag3,0.08094663918018341
+Per-pond specialist (IoTPond2),Turb_lag6,0.3981918692588806
+Per-pond specialist (IoTPond2),Turb_lag12,0.2183765023946762
+Per-pond specialist (IoTPond2),DO_lag1,0.07191688567399979
+Per-pond specialist (IoTPond2),DO_lag3,0.16305950284004211
+Per-pond specialist (IoTPond2),DO_lag6,0.1464584916830063
+Per-pond specialist (IoTPond2),DO_lag12,0.1538921445608139
+Per-pond specialist (IoTPond2),DO_lag24,0.06364309042692184
+Per-pond specialist (IoTPond2),pH_lag1,1.1353330612182617
+Per-pond specialist (IoTPond2),pH_lag3,0.4070570468902588
+Per-pond specialist (IoTPond2),pH_lag6,0.2842760682106018
+Per-pond specialist (IoTPond2),pH_lag12,2.2551686763763428
+Per-pond specialist (IoTPond2),pH_lag24,2.7945196628570557
+Per-pond specialist (IoTPond2),Temp_roll6_mean,0.1799250990152359
+Per-pond specialist (IoTPond2),Temp_roll6_std,0.11942155659198761
+Per-pond specialist (IoTPond2),DO_roll6_mean,0.8576188087463379
+Per-pond specialist (IoTPond2),pH_roll6_mean,0.9961609840393066
+Per-pond specialist (IoTPond3),Temp,0.2935539186000824
+Per-pond specialist (IoTPond3),Turb,0.41852352023124695
+Per-pond specialist (IoTPond3),HourSin,0.12221250683069229
+Per-pond specialist (IoTPond3),HourCos,0.0670727863907814
+Per-pond specialist (IoTPond3),DayOfYearSin,3.376582384109497
+Per-pond specialist (IoTPond3),DayOfYearCos,1.609519124031067
+Per-pond specialist (IoTPond3),Temp_lag1,0.2537561058998108
+Per-pond specialist (IoTPond3),Temp_lag3,0.24450775980949402
+Per-pond specialist (IoTPond3),Temp_lag6,1.5254096984863281
+Per-pond specialist (IoTPond3),Temp_lag12,0.4045628309249878
+Per-pond specialist (IoTPond3),Turb_lag1,0.5001124143600464
+Per-pond specialist (IoTPond3),Turb_lag3,0.7627336978912354
+Per-pond specialist (IoTPond3),Turb_lag6,0.34076815843582153
+Per-pond specialist (IoTPond3),Turb_lag12,0.8476211428642273
+Per-pond specialist (IoTPond3),DO_lag1,0.1362849473953247
+Per-pond specialist (IoTPond3),DO_lag3,2.477252721786499
+Per-pond specialist (IoTPond3),DO_lag6,0.5369020700454712
+Per-pond specialist (IoTPond3),DO_lag12,0.6600664854049683
+Per-pond specialist (IoTPond3),DO_lag24,0.1530003845691681
+Per-pond specialist (IoTPond3),pH_lag1,0.868440568447113
+Per-pond specialist (IoTPond3),pH_lag3,1.3933703899383545
+Per-pond specialist (IoTPond3),pH_lag6,1.212907075881958
+Per-pond specialist (IoTPond3),pH_lag12,1.2988098859786987
+Per-pond specialist (IoTPond3),pH_lag24,0.31015142798423767
+Per-pond specialist (IoTPond3),Temp_roll6_mean,0.8070179224014282
+Per-pond specialist (IoTPond3),Temp_roll6_std,0.15848813951015472
+Per-pond specialist (IoTPond3),DO_roll6_mean,5.4160332679748535
+Per-pond specialist (IoTPond3),pH_roll6_mean,2.893235445022583
+Per-pond specialist (IoTPond4),Temp,0.13230502605438232
+Per-pond specialist (IoTPond4),Turb,3.8941831588745117
+Per-pond specialist (IoTPond4),HourSin,0.08760921657085419
+Per-pond specialist (IoTPond4),HourCos,0.07445283979177475
+Per-pond specialist (IoTPond4),DayOfYearSin,1.6927958726882935
+Per-pond specialist (IoTPond4),DayOfYearCos,0.30857816338539124
+Per-pond specialist (IoTPond4),Temp_lag1,0.14130493998527527
+Per-pond specialist (IoTPond4),Temp_lag3,0.06189800426363945
+Per-pond specialist (IoTPond4),Temp_lag6,0.40695276856422424
+Per-pond specialist (IoTPond4),Temp_lag12,0.1395660936832428
+Per-pond specialist (IoTPond4),Turb_lag1,3.366288661956787
+Per-pond specialist (IoTPond4),Turb_lag3,0.4433418810367584
+Per-pond specialist (IoTPond4),Turb_lag6,0.1971353441476822
+Per-pond specialist (IoTPond4),Turb_lag12,0.14917254447937012
+Per-pond specialist (IoTPond4),DO_lag1,0.17602446675300598
+Per-pond specialist (IoTPond4),DO_lag3,0.10444573312997818
+Per-pond specialist (IoTPond4),DO_lag6,0.134926900267601
+Per-pond specialist (IoTPond4),DO_lag12,0.18261484801769257
+Per-pond specialist (IoTPond4),DO_lag24,0.1760530322790146
+Per-pond specialist (IoTPond4),pH_lag1,0.46414992213249207
+Per-pond specialist (IoTPond4),pH_lag3,0.47464719414711
+Per-pond specialist (IoTPond4),pH_lag6,2.292397975921631
+Per-pond specialist (IoTPond4),pH_lag12,0.30568641424179077
+Per-pond specialist (IoTPond4),pH_lag24,2.038968086242676
+Per-pond specialist (IoTPond4),Temp_roll6_mean,0.15342944860458374
+Per-pond specialist (IoTPond4),Temp_roll6_std,0.13947239518165588
+Per-pond specialist (IoTPond4),DO_roll6_mean,0.16716636717319489
+Per-pond specialist (IoTPond4),pH_roll6_mean,0.8766430616378784
+Per-pond specialist (IoTPond6),Temp,0.0868881568312645
+Per-pond specialist (IoTPond6),Turb,0.05889846384525299
+Per-pond specialist (IoTPond6),HourSin,0.1688314527273178
+Per-pond specialist (IoTPond6),HourCos,0.116144560277462
+Per-pond specialist (IoTPond6),DayOfYearSin,10.825525283813477
+Per-pond specialist (IoTPond6),DayOfYearCos,1.9233977794647217
+Per-pond specialist (IoTPond6),Temp_lag1,0.11786364763975143
+Per-pond specialist (IoTPond6),Temp_lag3,0.29674819111824036
+Per-pond specialist (IoTPond6),Temp_lag6,0.2582215368747711
+Per-pond specialist (IoTPond6),Temp_lag12,0.15343979001045227
+Per-pond specialist (IoTPond6),Turb_lag1,0.10697276145219803
+Per-pond specialist (IoTPond6),Turb_lag3,0.1488065868616104
+Per-pond specialist (IoTPond6),Turb_lag6,0.14063219726085663
+Per-pond specialist (IoTPond6),Turb_lag12,0.3905206024646759
+Per-pond specialist (IoTPond6),DO_lag1,0.12386906147003174
+Per-pond specialist (IoTPond6),DO_lag3,0.10690077394247055
+Per-pond specialist (IoTPond6),DO_lag6,0.1257459968328476
+Per-pond specialist (IoTPond6),DO_lag12,0.4222382605075836
+Per-pond specialist (IoTPond6),DO_lag24,0.1874728500843048
+Per-pond specialist (IoTPond6),pH_lag1,1.0625110864639282
+Per-pond specialist (IoTPond6),pH_lag3,0.4500827491283417
+Per-pond specialist (IoTPond6),pH_lag6,0.6391658186912537
+Per-pond specialist (IoTPond6),pH_lag12,0.4209076762199402
+Per-pond specialist (IoTPond6),pH_lag24,0.4389621913433075
+Per-pond specialist (IoTPond6),Temp_roll6_mean,0.5385600328445435
+Per-pond specialist (IoTPond6),Temp_roll6_std,0.1513042151927948
+Per-pond specialist (IoTPond6),DO_roll6_mean,0.20221897959709167
+Per-pond specialist (IoTPond6),pH_roll6_mean,0.6390924453735352
+Per-pond specialist (IoTPond7),Temp,0.06519520282745361
+Per-pond specialist (IoTPond7),Turb,0.12961086630821228
+Per-pond specialist (IoTPond7),HourSin,0.059205930680036545
+Per-pond specialist (IoTPond7),HourCos,0.17732195556163788
+Per-pond specialist (IoTPond7),DayOfYearSin,1.857080101966858
+Per-pond specialist (IoTPond7),DayOfYearCos,0.14121100306510925
+Per-pond specialist (IoTPond7),Temp_lag1,0.06325516104698181
+Per-pond specialist (IoTPond7),Temp_lag3,0.07072839885950089
+Per-pond specialist (IoTPond7),Temp_lag6,0.1743164211511612
+Per-pond specialist (IoTPond7),Temp_lag12,0.12037330120801926
+Per-pond specialist (IoTPond7),Turb_lag1,0.18964783847332
+Per-pond specialist (IoTPond7),Turb_lag3,0.13262024521827698
+Per-pond specialist (IoTPond7),Turb_lag6,0.16742201149463654
+Per-pond specialist (IoTPond7),Turb_lag12,0.10212302953004837
+Per-pond specialist (IoTPond7),DO_lag1,0.1758265197277069
+Per-pond specialist (IoTPond7),DO_lag3,0.13246674835681915
+Per-pond specialist (IoTPond7),DO_lag6,0.07703348249197006
+Per-pond specialist (IoTPond7),DO_lag12,0.11154943704605103
+Per-pond specialist (IoTPond7),DO_lag24,0.09489218890666962
+Per-pond specialist (IoTPond7),pH_lag1,1.1749011278152466
+Per-pond specialist (IoTPond7),pH_lag3,1.2771867513656616
+Per-pond specialist (IoTPond7),pH_lag6,1.3815786838531494
+Per-pond specialist (IoTPond7),pH_lag12,0.3691030442714691
+Per-pond specialist (IoTPond7),pH_lag24,0.2904662489891052
+Per-pond specialist (IoTPond7),Temp_roll6_mean,0.10851351171731949
+Per-pond specialist (IoTPond7),Temp_roll6_std,0.2828230559825897
+Per-pond specialist (IoTPond7),DO_roll6_mean,0.537024974822998
+Per-pond specialist (IoTPond7),pH_roll6_mean,1.2903988361358643
+Per-pond specialist (IoTpond1),Temp,0.16681957244873047
+Per-pond specialist (IoTpond1),Turb,0.1545523703098297
+Per-pond specialist (IoTpond1),HourSin,0.5749124884605408
+Per-pond specialist (IoTpond1),HourCos,0.17297092080116272
+Per-pond specialist (IoTpond1),DayOfYearSin,0.8429832458496094
+Per-pond specialist (IoTpond1),DayOfYearCos,0.3666395843029022
+Per-pond specialist (IoTpond1),Temp_lag1,0.13947567343711853
+Per-pond specialist (IoTpond1),Temp_lag3,0.1141183003783226
+Per-pond specialist (IoTpond1),Temp_lag6,0.13238230347633362
+Per-pond specialist (IoTpond1),Temp_lag12,0.18217356503009796
+Per-pond specialist (IoTpond1),Turb_lag1,0.15787118673324585
+Per-pond specialist (IoTpond1),Turb_lag3,0.05407826974987984
+Per-pond specialist (IoTpond1),Turb_lag6,0.12326526641845703
+Per-pond specialist (IoTpond1),Turb_lag12,0.1259465366601944
+Per-pond specialist (IoTpond1),DO_lag1,0.08619959652423859
+Per-pond specialist (IoTpond1),DO_lag3,0.09199350327253342
+Per-pond specialist (IoTpond1),DO_lag6,0.1758330762386322
+Per-pond specialist (IoTpond1),DO_lag12,0.17832978069782257
+Per-pond specialist (IoTpond1),DO_lag24,0.09749414771795273
+Per-pond specialist (IoTpond1),pH_lag1,0.5059238076210022
+Per-pond specialist (IoTpond1),pH_lag3,0.2604943513870239
+Per-pond specialist (IoTpond1),pH_lag6,1.6757198572158813
+Per-pond specialist (IoTpond1),pH_lag12,3.576584815979004
+Per-pond specialist (IoTpond1),pH_lag24,0.849153995513916
+Per-pond specialist (IoTpond1),Temp_roll6_mean,0.23206064105033875
+Per-pond specialist (IoTpond1),Temp_roll6_std,0.09217753261327744
+Per-pond specialist (IoTpond1),DO_roll6_mean,0.6147382259368896
+Per-pond specialist (IoTpond1),pH_roll6_mean,1.0685184001922607

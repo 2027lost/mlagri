@@ -1,0 +1,52 @@
+{
+  "pond_names": [
+    "IoTPond2",
+    "IoTPond3",
+    "IoTPond4",
+    "IoTPond6",
+    "IoTPond7",
+    "IoTPond9",
+    "IoTpond1"
+  ],
+  "pond_map": {
+    "IoTPond2": 0,
+    "IoTPond3": 1,
+    "IoTPond4": 2,
+    "IoTPond6": 3,
+    "IoTPond7": 4,
+    "IoTPond9": 5,
+    "IoTpond1": 6
+  },
+  "horizon": 24,
+  "feature_cols": [
+    "Temp",
+    "Turb",
+    "HourSin",
+    "HourCos",
+    "DayOfYearSin",
+    "DayOfYearCos",
+    "Temp_lag1",
+    "Temp_lag3",
+    "Temp_lag6",
+    "Temp_lag12",
+    "Turb_lag1",
+    "Turb_lag3",
+    "Turb_lag6",
+    "Turb_lag12",
+    "DO_lag1",
+    "DO_lag3",
+    "DO_lag6",
+    "DO_lag12",
+    "DO_lag24",
+    "pH_lag1",
+    "pH_lag3",
+    "pH_lag6",
+    "pH_lag12",
+    "pH_lag24",
+    "Temp_roll6_mean",
+    "Temp_roll6_std",
+    "DO_roll6_mean",
+    "pH_roll6_mean",
+    "PondCode"
+  ]
+}

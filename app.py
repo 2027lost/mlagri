@@ -1,160 +1,98 @@
-import os, json, traceback
+import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-import streamlit as st
-import joblib
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
 
-MODELS_DIR = "models"
-META_PATH = os.path.join(MODELS_DIR, "meta.json")
-HIST_PATH = os.path.join(MODELS_DIR, "history.parquet")
+
+APP_DATA_DIR = Path("app_data")
+
 st.set_page_config(page_title="Pond Forecaster", layout="wide", page_icon="🐟")
 
 
-@st.cache_resource
-def load_assets():
-    with open(META_PATH) as fh:
-        meta = json.load(fh)
-    history = pd.read_parquet(HIST_PATH)
-    results = None
-    if os.path.exists("model_comparison_v2.csv"):
-        results = pd.read_csv("model_comparison_v2.csv")
-    return (meta, history, results)
+@st.cache_data
+def load_data():
+    with open(APP_DATA_DIR / "meta.json") as handle:
+        meta = json.load(handle)
+    history = pd.read_csv(APP_DATA_DIR / "history.csv", parse_dates=["Datetime"])
+    forecasts = pd.read_csv(
+        APP_DATA_DIR / "forecasts.csv", parse_dates=["anchor_dt", "target_dt"]
+    )
+    backtests = pd.read_csv(APP_DATA_DIR / "backtests.csv", parse_dates=["Datetime"])
+    backtest_metrics = pd.read_csv(APP_DATA_DIR / "backtest_metrics.csv")
+    feature_importance = pd.read_csv(APP_DATA_DIR / "feature_importance.csv")
+    comparison = pd.read_csv("model_comparison_v2.csv")
+    return meta, history, forecasts, backtests, backtest_metrics, feature_importance, comparison
 
 
-@st.cache_resource
-def load_model_bundle(model_path):
-    return joblib.load(model_path)
+meta, history, forecasts, backtests, backtest_metrics, feature_importance, comparison = load_data()
 
-
-def model_load_error(model_path, error):
-    st.error(f"Could not load model artifact: `{model_path}`")
-    st.code("".join(traceback.format_exception(type(error), error, error.__traceback__)))
-    st.stop()
-
-
-meta, history, results = load_assets()
 st.sidebar.title("🐟 Pond Forecaster")
 st.sidebar.caption("24-hour ahead DO & pH prediction")
+
 pond_choice = st.sidebar.selectbox("Pond", options=meta["pond_names"], index=0)
-available_models = ["Global (XGB joint + quantiles, log-DO)"]
-pond_model_path = os.path.join(MODELS_DIR, f"pond_{pond_choice}.joblib")
-if os.path.exists(pond_model_path):
-    available_models.insert(0, f"Per-pond specialist ({pond_choice})")
+
+available_models = forecasts.loc[forecasts["pond"] == pond_choice, "model"].tolist()
 model_choice = st.sidebar.radio("Model", available_models)
-use_per_pond = model_choice.startswith("Per-pond")
 window_hours = st.sidebar.slider("History window (hours)", 48, 720, 240, step=24)
+
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Inputs**: Temp, Turb, historical DO/pH, pond ID")
 st.sidebar.markdown("**Targets**: DO(t+24h), pH(t+24h)")
-st.sidebar.markdown("**Bands**: P10–P90 quantile heads")
+st.sidebar.markdown("**Bands**: P10-P90 quantile heads")
+st.sidebar.caption("Deployment uses precomputed model outputs to avoid cloud pickle/joblib issues.")
 
-
-def forecast_for(pond_name, bundle, history):
-    pond_hist = history[history["PondCode"] == meta["pond_map"][pond_name]].copy()
-    pond_hist = pond_hist.sort_values("Datetime").reset_index(drop=True)
-    if pond_hist.empty:
-        return None
-    last_row = pond_hist.iloc[[-1]]
-    X = last_row[meta["feature_cols"]].values
-    Xs = bundle["scaler"].transform(X)
-    pred = bundle["joint"].predict(Xs)[0]
-    do_med = float(np.exp(pred[0]))
-    ph_med = float(pred[1])
-    qd_lo = float(np.exp(bundle["quantiles"]["DO_log_q10"].predict(Xs)[0]))
-    qd_hi = float(np.exp(bundle["quantiles"]["DO_log_q90"].predict(Xs)[0]))
-    qp_lo = float(bundle["quantiles"]["pH_q10"].predict(Xs)[0])
-    qp_hi = float(bundle["quantiles"]["pH_q90"].predict(Xs)[0])
-    return {
-        "anchor_dt": pond_hist["Datetime"].iloc[-1],
-        "anchor_do": float(pond_hist["DO"].iloc[-1]),
-        "anchor_ph": float(pond_hist["pH"].iloc[-1]),
-        "do": (qd_lo, do_med, qd_hi),
-        "ph": (qp_lo, ph_med, qp_hi),
-        "history": pond_hist,
-    }
-
-
-def backtest_pond(pond_name, bundle, history):
-    pond_hist = history[history["PondCode"] == meta["pond_map"][pond_name]].copy()
-    pond_hist = pond_hist.sort_values("Datetime").reset_index(drop=True)
-    split = int(len(pond_hist) * 0.8)
-    test = pond_hist.iloc[split:].copy()
-    if test.empty:
-        return None
-    X = test[meta["feature_cols"]].values
-    Xs = bundle["scaler"].transform(X)
-    pred = bundle["joint"].predict(Xs)
-    do_pred = np.exp(pred[:, 0])
-    ph_pred = pred[:, 1]
-    qd_lo = np.exp(bundle["quantiles"]["DO_log_q10"].predict(Xs))
-    qd_hi = np.exp(bundle["quantiles"]["DO_log_q90"].predict(Xs))
-    qp_lo = bundle["quantiles"]["pH_q10"].predict(Xs)
-    qp_hi = bundle["quantiles"]["pH_q90"].predict(Xs)
-    test["DO_pred"] = do_pred
-    test["DO_lo"] = qd_lo
-    test["DO_hi"] = qd_hi
-    test["pH_pred"] = ph_pred
-    test["pH_lo"] = qp_lo
-    test["pH_hi"] = qp_hi
-    test["DO_true"] = test["DO_future"]
-    test["pH_true"] = test["pH_future"]
-    return test
-
+forecast = forecasts[
+    (forecasts["pond"] == pond_choice) & (forecasts["model"] == model_choice)
+].iloc[0]
 
 st.title("🐟 Fish Pond 24-h Water Quality Forecast")
 st.caption(
-    f"Predicting DO and pH 24 hours ahead using XGBoost joint multi-output trees with quantile bands. Pond: **{pond_choice}** | Model: **{model_choice}**"
+    f"Predicting DO and pH 24 hours ahead using saved XGBoost model outputs. Pond: **{pond_choice}** | Model: **{model_choice}**"
 )
-selected_model_path = (
-    pond_model_path if use_per_pond else os.path.join(MODELS_DIR, "global.joblib")
-)
-try:
-    bundle = load_model_bundle(selected_model_path)
-except Exception as exc:
-    model_load_error(selected_model_path, exc)
-fc = forecast_for(pond_choice, bundle, history)
+
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Anchor DO (now)", f"{fc['anchor_do']:.2f} mg/L")
+col1.metric("Anchor DO (now)", f"{forecast['anchor_do']:.2f} mg/L")
 col2.metric(
     "Forecast DO (+24h)",
-    f"{fc['do'][1]:.2f} mg/L",
-    delta=f"{fc['do'][1] - fc['anchor_do']:+.2f}",
+    f"{forecast['do_pred']:.2f} mg/L",
+    delta=f"{forecast['do_pred'] - forecast['anchor_do']:+.2f}",
 )
-col3.metric("Anchor pH (now)", f"{fc['anchor_ph']:.2f}")
+col3.metric("Anchor pH (now)", f"{forecast['anchor_ph']:.2f}")
 col4.metric(
     "Forecast pH (+24h)",
-    f"{fc['ph'][1]:.2f}",
-    delta=f"{fc['ph'][1] - fc['anchor_ph']:+.2f}",
+    f"{forecast['ph_pred']:.2f}",
+    delta=f"{forecast['ph_pred'] - forecast['anchor_ph']:+.2f}",
 )
+
 alerts = []
-if fc["do"][0] < 4.0:
+if forecast["do_lo"] < 4.0:
     alerts.append(
-        f"⚠️ DO P10 = {fc['do'][0]:.2f} mg/L — below safe threshold (4 mg/L) within 24h."
+        f"DO P10 = {forecast['do_lo']:.2f} mg/L is below safe threshold (4 mg/L) within 24h."
     )
-if fc["ph"][0] < 6.5 or fc["ph"][2] > 8.5:
+if forecast["ph_lo"] < 6.5 or forecast["ph_hi"] > 8.5:
     alerts.append(
-        f"⚠️ pH band [{fc['ph'][0]:.2f}, {fc['ph'][2]:.2f}] outside safe window (6.5–8.5)."
+        f"pH band [{forecast['ph_lo']:.2f}, {forecast['ph_hi']:.2f}] is outside safe window (6.5-8.5)."
     )
-for a in alerts:
-    st.warning(a)
+for alert in alerts:
+    st.warning(alert)
 if not alerts:
-    st.success("✅ Predicted water quality stays within safe operating range.")
+    st.success("Predicted water quality stays within safe operating range.")
+
 tab1, tab2, tab3, tab4 = st.tabs(
     ["📈 Forecast", "🔁 Back-test", "📊 Model comparison", "🧠 Feature importance"]
 )
+
 with tab1:
-    hist = fc["history"].tail(window_hours)
-    anchor_dt = fc["anchor_dt"]
-    target_dt = anchor_dt + pd.Timedelta(hours=meta["horizon"])
-    fig = make_subplots(
-        rows=2, cols=1, shared_xaxes=True, subplot_titles=("DO (mg/L)", "pH")
-    )
+    pond_hist = history[history["PondID"] == pond_choice].tail(window_hours)
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, subplot_titles=("DO (mg/L)", "pH"))
     fig.add_trace(
         go.Scatter(
-            x=hist["Datetime"],
-            y=hist["DO"],
+            x=pond_hist["Datetime"],
+            y=pond_hist["DO"],
             name="DO observed",
             line=dict(color="#1f77b4", width=1),
         ),
@@ -163,8 +101,8 @@ with tab1:
     )
     fig.add_trace(
         go.Scatter(
-            x=[target_dt],
-            y=[fc["do"][1]],
+            x=[forecast["target_dt"]],
+            y=[forecast["do_pred"]],
             name="DO P50 forecast",
             mode="markers",
             marker=dict(color="#1f77b4", size=12, symbol="diamond"),
@@ -174,8 +112,8 @@ with tab1:
     )
     fig.add_trace(
         go.Scatter(
-            x=[anchor_dt, target_dt],
-            y=[fc["anchor_do"], fc["do"][1]],
+            x=[forecast["anchor_dt"], forecast["target_dt"]],
+            y=[forecast["anchor_do"], forecast["do_pred"]],
             name="DO trajectory",
             line=dict(color="#1f77b4", dash="dash"),
             showlegend=False,
@@ -185,9 +123,9 @@ with tab1:
     )
     fig.add_trace(
         go.Scatter(
-            x=[target_dt, target_dt],
-            y=[fc["do"][0], fc["do"][2]],
-            name="DO P10–P90",
+            x=[forecast["target_dt"], forecast["target_dt"]],
+            y=[forecast["do_lo"], forecast["do_hi"]],
+            name="DO P10-P90",
             line=dict(color="#1f77b4", width=8),
             opacity=0.3,
         ),
@@ -204,8 +142,8 @@ with tab1:
     )
     fig.add_trace(
         go.Scatter(
-            x=hist["Datetime"],
-            y=hist["pH"],
+            x=pond_hist["Datetime"],
+            y=pond_hist["pH"],
             name="pH observed",
             line=dict(color="#2ca02c", width=1),
         ),
@@ -214,8 +152,8 @@ with tab1:
     )
     fig.add_trace(
         go.Scatter(
-            x=[target_dt],
-            y=[fc["ph"][1]],
+            x=[forecast["target_dt"]],
+            y=[forecast["ph_pred"]],
             name="pH P50 forecast",
             mode="markers",
             marker=dict(color="#2ca02c", size=12, symbol="diamond"),
@@ -225,8 +163,8 @@ with tab1:
     )
     fig.add_trace(
         go.Scatter(
-            x=[anchor_dt, target_dt],
-            y=[fc["anchor_ph"], fc["ph"][1]],
+            x=[forecast["anchor_dt"], forecast["target_dt"]],
+            y=[forecast["anchor_ph"], forecast["ph_pred"]],
             name="pH trajectory",
             line=dict(color="#2ca02c", dash="dash"),
             showlegend=False,
@@ -236,172 +174,154 @@ with tab1:
     )
     fig.add_trace(
         go.Scatter(
-            x=[target_dt, target_dt],
-            y=[fc["ph"][0], fc["ph"][2]],
-            name="pH P10–P90",
+            x=[forecast["target_dt"], forecast["target_dt"]],
+            y=[forecast["ph_lo"], forecast["ph_hi"]],
+            name="pH P10-P90",
             line=dict(color="#2ca02c", width=8),
             opacity=0.3,
         ),
         row=2,
         col=1,
     )
-    fig.add_hrect(
-        y0=6.5, y1=8.5, fillcolor="green", opacity=0.05, line_width=0, row=2, col=1
-    )
-    fig.update_layout(
-        height=600,
-        hovermode="x unified",
-        showlegend=True,
-        legend=dict(orientation="h", y=-0.15),
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    fig.add_hrect(y0=6.5, y1=8.5, fillcolor="green", opacity=0.05, line_width=0, row=2, col=1)
+    fig.update_layout(height=600, hovermode="x unified", legend=dict(orientation="h", y=-0.15))
+    st.plotly_chart(fig, width="stretch")
     st.caption(
-        f"Anchor time: {anchor_dt} | Forecast target: {target_dt} (+{meta['horizon']}h)"
+        f"Anchor time: {forecast['anchor_dt']} | Forecast target: {forecast['target_dt']} (+{meta['horizon']}h)"
     )
-with tab2:
-    bt = backtest_pond(pond_choice, bundle, history)
-    if bt is None or bt.empty:
-        st.info("Not enough data for back-test.")
-    else:
-        from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-        do_mae = mean_absolute_error(bt["DO_true"], bt["DO_pred"])
-        ph_mae = mean_absolute_error(bt["pH_true"], bt["pH_pred"])
-        do_r2 = r2_score(bt["DO_true"], bt["DO_pred"])
-        ph_r2 = r2_score(bt["pH_true"], bt["pH_pred"])
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("DO MAE", f"{do_mae:.3f}")
-        c2.metric("DO R²", f"{do_r2:.3f}")
-        c3.metric("pH MAE", f"{ph_mae:.3f}")
-        c4.metric("pH R²", f"{ph_r2:.3f}")
-        fig = make_subplots(
-            rows=2,
-            cols=1,
-            shared_xaxes=True,
-            subplot_titles=("DO back-test (last 20%)", "pH back-test (last 20%)"),
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=bt["Datetime"],
-                y=bt["DO_true"],
-                name="DO actual",
-                line=dict(color="black", width=1.2),
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=bt["Datetime"],
-                y=bt["DO_pred"],
-                name="DO pred",
-                line=dict(color="#1f77b4", width=1),
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=bt["Datetime"],
-                y=bt["DO_hi"],
-                name="DO P90",
-                line=dict(color="#1f77b4", width=0),
-                showlegend=False,
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=bt["Datetime"],
-                y=bt["DO_lo"],
-                name="DO P10",
-                line=dict(color="#1f77b4", width=0),
-                fill="tonexty",
-                fillcolor="rgba(31,119,180,0.2)",
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=bt["Datetime"],
-                y=bt["pH_true"],
-                name="pH actual",
-                line=dict(color="black", width=1.2),
-            ),
-            row=2,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=bt["Datetime"],
-                y=bt["pH_pred"],
-                name="pH pred",
-                line=dict(color="#2ca02c", width=1),
-            ),
-            row=2,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=bt["Datetime"],
-                y=bt["pH_hi"],
-                name="pH P90",
-                line=dict(color="#2ca02c", width=0),
-                showlegend=False,
-            ),
-            row=2,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=bt["Datetime"],
-                y=bt["pH_lo"],
-                name="pH P10",
-                line=dict(color="#2ca02c", width=0),
-                fill="tonexty",
-                fillcolor="rgba(44,160,44,0.2)",
-            ),
-            row=2,
-            col=1,
-        )
-        fig.update_layout(
-            height=600, hovermode="x unified", legend=dict(orientation="h", y=-0.1)
-        )
-        st.plotly_chart(fig, use_container_width=True)
+with tab2:
+    selected_backtest = backtests[
+        (backtests["pond"] == pond_choice) & (backtests["model"] == model_choice)
+    ]
+    selected_metrics = backtest_metrics[
+        (backtest_metrics["pond"] == pond_choice)
+        & (backtest_metrics["model"] == model_choice)
+    ].iloc[0]
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("DO MAE", f"{selected_metrics['DO_MAE']:.3f}")
+    col2.metric("DO R²", f"{selected_metrics['DO_R2']:.3f}")
+    col3.metric("pH MAE", f"{selected_metrics['pH_MAE']:.3f}")
+    col4.metric("pH R²", f"{selected_metrics['pH_R2']:.3f}")
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        shared_xaxes=True,
+        subplot_titles=("DO back-test (last 20%)", "pH back-test (last 20%)"),
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=selected_backtest["Datetime"],
+            y=selected_backtest["DO_true"],
+            name="DO actual",
+            line=dict(color="black", width=1.2),
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=selected_backtest["Datetime"],
+            y=selected_backtest["DO_pred"],
+            name="DO pred",
+            line=dict(color="#1f77b4", width=1),
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=selected_backtest["Datetime"],
+            y=selected_backtest["DO_hi"],
+            name="DO P90",
+            line=dict(color="#1f77b4", width=0),
+            showlegend=False,
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=selected_backtest["Datetime"],
+            y=selected_backtest["DO_lo"],
+            name="DO P10",
+            line=dict(color="#1f77b4", width=0),
+            fill="tonexty",
+            fillcolor="rgba(31,119,180,0.2)",
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=selected_backtest["Datetime"],
+            y=selected_backtest["pH_true"],
+            name="pH actual",
+            line=dict(color="black", width=1.2),
+        ),
+        row=2,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=selected_backtest["Datetime"],
+            y=selected_backtest["pH_pred"],
+            name="pH pred",
+            line=dict(color="#2ca02c", width=1),
+        ),
+        row=2,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=selected_backtest["Datetime"],
+            y=selected_backtest["pH_hi"],
+            name="pH P90",
+            line=dict(color="#2ca02c", width=0),
+            showlegend=False,
+        ),
+        row=2,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=selected_backtest["Datetime"],
+            y=selected_backtest["pH_lo"],
+            name="pH P10",
+            line=dict(color="#2ca02c", width=0),
+            fill="tonexty",
+            fillcolor="rgba(44,160,44,0.2)",
+        ),
+        row=2,
+        col=1,
+    )
+    fig.update_layout(height=600, hovermode="x unified", legend=dict(orientation="h", y=-0.1))
+    st.plotly_chart(fig, width="stretch")
+
 with tab3:
-    if results is None:
-        st.info("No comparison CSV found.")
-    else:
-        st.subheader("Pooled & per-pond comparison")
-        st.dataframe(
-            results.style.format(
-                {"MAE": "{:.3f}", "RMSE": "{:.3f}", "R2": "{:.3f}", "MAPE": "{:.2f}"}
-            ),
-            use_container_width=True,
-            height=600,
-        )
-        st.caption(
-            "Lower MAE/RMSE/MAPE is better. R² near 1 is best; negative = worse than mean."
-        )
+    st.subheader("Pooled & per-pond comparison")
+    st.dataframe(
+        comparison.style.format({"MAE": "{:.3f}", "RMSE": "{:.3f}", "R2": "{:.3f}", "MAPE": "{:.2f}"}),
+        width="stretch",
+        height=600,
+    )
+    st.caption("Lower MAE/RMSE/MAPE is better. R² near 1 is best; negative = worse than mean.")
+
 with tab4:
-    booster = bundle["joint"].get_booster()
-    score = booster.get_score(importance_type="gain")
-    fmap = {f"f{i}": n for (i, n) in enumerate(meta["feature_cols"])}
-    items = sorted(
-        [(fmap.get(k, k), v) for (k, v) in score.items()],
-        key=lambda x: x[1],
-        reverse=True,
-    )[:20]
-    names = [x[0] for x in items][::-1]
-    vals = [x[1] for x in items][::-1]
+    selected_importance = feature_importance[feature_importance["model"] == model_choice]
+    selected_importance = selected_importance.sort_values("importance", ascending=False).head(20)
+    selected_importance = selected_importance.iloc[::-1]
     fig = go.Figure(
-        go.Bar(x=vals, y=names, orientation="h", marker=dict(color="#9467bd"))
+        go.Bar(
+            x=selected_importance["importance"],
+            y=selected_importance["feature"],
+            orientation="h",
+            marker=dict(color="#9467bd"),
+        )
     )
     fig.update_layout(
-        title=f"Top-20 feature importance (gain) — {model_choice}",
+        title=f"Top-20 feature importance (gain) - {model_choice}",
         height=600,
         xaxis_title="Gain",
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
